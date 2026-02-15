@@ -1,0 +1,160 @@
+-- WATER UI (separate script, run after bundle)
+
+repeat task.wait() until shared and shared.water
+local Water = shared.water
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "WaterControls"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = playerGui
+
+local frame = Instance.new("Frame")
+frame.Name = "MainFrame"
+frame.Size = UDim2.new(0, 260, 0, 430)
+frame.Position = UDim2.new(1, -280, 0, 100)
+frame.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+local watermark = Instance.new("ImageLabel")
+watermark.Name = "Watermark"
+watermark.Size = UDim2.new(1, -20, 0, 55)      -- Bigger: 50px tall
+watermark.Position = UDim2.new(0, 10, 0, 0)    -- Flush to very top
+watermark.BackgroundTransparency = 1
+watermark.Image = "rbxassetid://13795082588"
+watermark.ScaleType = Enum.ScaleType.Fit
+watermark.ImageTransparency = 0.3
+watermark.ZIndex = 2
+watermark.Parent = frame
+
+local wCorner = Instance.new("UICorner")
+wCorner.CornerRadius = UDim.new(0, 8)
+wCorner.Parent = watermark
+
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = frame
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 1.6
+stroke.Color = Color3.fromRGB(60, 140, 255)
+stroke.Transparency = 0.2
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Size = UDim2.new(1, -20, 0, 30)
+title.Position = UDim2.new(0, 10, 0, 6)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamBold
+title.Text = "Savior Takuji Panel"
+title.TextSize = 18
+title.TextColor3 = Color3.fromRGB(220, 230, 255)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = frame
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Name = "StatusLabel"
+statusLabel.Size = UDim2.new(1, -20, 0, 18)
+statusLabel.Position = UDim2.new(0, 10, 0, 32)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 14
+statusLabel.TextColor3 = Color3.fromRGB(140, 160, 200)
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.Text = "Status: ON (Takuji running)"
+statusLabel.Parent = frame
+
+local padding = Instance.new("UIPadding")
+padding.PaddingLeft = UDim.new(0, 10)
+padding.PaddingRight = UDim.new(0, 10)
+padding.PaddingTop = UDim.new(0, 56)
+padding.Parent = frame
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.Padding = UDim.new(0, 6)
+listLayout.FillDirection = Enum.FillDirection.Vertical
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Parent = frame
+
+local function createToggleRow(fieldName, labelText)
+    local row = Instance.new("Frame")
+    row.Name = fieldName .. "_Row"
+    row.Size = UDim2.new(1, 0, 0, 26)
+    row.BackgroundTransparency = 1
+    row.Parent = frame
+
+    local label = Instance.new("TextLabel")
+    label.Name = "Label"
+    label.Size = UDim2.new(1, -90, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = Color3.fromRGB(210, 220, 250)
+    label.Text = labelText
+    label.Parent = row
+
+    local button = Instance.new("TextButton")
+    button.Name = "ToggleButton"
+    button.AnchorPoint = Vector2.new(1, 0.5)
+    button.Position = UDim2.new(1, -4, 0.5, 0)
+    button.Size = UDim2.new(0, 70, 0, 22)
+    button.BackgroundColor3 = Color3.fromRGB(40, 48, 70)
+    button.BorderSizePixel = 0
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 13
+    button.TextColor3 = Color3.fromRGB(220, 230, 255)
+    button.Parent = row
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = button
+
+    local function applyState()
+        local value = Water[fieldName]
+        if value then
+            button.Text = "ON"
+            button.BackgroundColor3 = Color3.fromRGB(50, 190, 120)
+        else
+            button.Text = "OFF"
+            button.BackgroundColor3 = Color3.fromRGB(120, 40, 50)
+        end
+    end
+
+    applyState()
+
+    button.MouseButton1Click:Connect(function()
+        Water[fieldName] = not Water[fieldName]
+        applyState()
+    end)
+end
+
+createToggleRow("hitFromAnywhere", "Hit from anywhere")
+createToggleRow("instantSpin", "Instant spin")
+createToggleRow("alwaysMaxServePower", "Always max serve power")
+createToggleRow("silentUnlockedCamera", "Silent unlocked camera")
+createToggleRow("autoGuard", "Auto guard")
+createToggleRow("autoGuardDebugging", "Auto guard debugging")
+createToggleRow("autoGuardTeleporting", "Auto guard teleporting")
+createToggleRow("autoGuardRedirectTowardsCenter", "Auto guard redirect center")
+
+-- Right Shift to hide/show UI
+local UserInputService = game:GetService("UserInputService")
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end  -- Ignore if typing in chat
+    
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        gui.Enabled = not gui.Enabled
+    end
+end)
